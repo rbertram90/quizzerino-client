@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es2016",
+        "jsx": "preserve",
+        "sourceMap": true
+    },
+    "exclude": [
+        "node_modules",
+        "**/node_modules/*",
+        "public/app/dist"
+    ],
+    "files": [
+        "public/app/domhelper.ts",
+        "public/app/translate.ts",
+        "public/app/component.ts",
+        "public/app/player.ts",
+        "public/app/playerlist.ts",
+        "public/app/game.ts",
+        "public/app/main.ts"
+    ]
+}
