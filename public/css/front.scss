@@ -1,3 +1,6 @@
+// Variables
+$deep_purple: #21007F;
+
 body {
     font-size: 18px;
 }
@@ -7,14 +10,15 @@ body, h1, h2, h3, h4, h5, h6, p {
 
 body {
     background-color: #444;
-    background-image: linear-gradient(#444 30%, #21007F);
+    background-image: linear-gradient(#444 30%, $deep_purple);
     margin: 0 30px 30px 30px;
 }
 header {
     padding: 30px;
-}
-header p {
-    color: #aaa;
+
+    p {
+        color: #aaa;
+    }
 }
 
 section {
@@ -25,7 +29,7 @@ section {
 }
 
 a {
-    color: #21007F;
+    color: $deep_purple;
 }
 a:hover {
     text-decoration: none;
@@ -57,18 +61,19 @@ code {
 }
 
 .big-button {
-    background-color: #21007F;
-    background-image: radial-gradient(#21007F, rgb(68, 23, 192));
+    background-color: $deep_purple;
+    background-image: radial-gradient($deep_purple, rgb(68, 23, 192));
     color: #fff;
     padding: 10px 50px;
     text-decoration: none;
     transition: background-image .3s, background-color .3s;
     display: inline-block;
     border-radius: 3px;
-}
-.big-button:hover {
-    background-color: rgb(68, 37, 155);
-    background-image: radial-gradient(rgb(68, 23, 192), #21007F);
+
+    &:hover {
+        background-color: rgb(68, 37, 155);
+        background-image: radial-gradient(rgb(68, 23, 192), $deep_purple);
+    }
 }
 
 .done {

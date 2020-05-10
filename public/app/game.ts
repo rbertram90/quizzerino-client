@@ -308,6 +308,12 @@ class Game {
         game.updateComponents(data);
     }
 
+    /**
+     * Farm out responsibility of updating screen to any individual
+     * components on screen.
+     * 
+     * @param message Message direct from WebSocket server
+     */
     public updateComponents(message: MessageEvent) {
         for (var i in this.components) {
             if (this.components[i]) {
@@ -316,6 +322,15 @@ class Game {
         }
     }
 
+    /**
+     * Generate the game config form
+     * Fields:
+     * - Which question set should be used?
+     * - @todo Time limit
+     * - @tood Winning score
+     * 
+     * @param data Data from server for the config form
+     */
     public loadConfigForm(data) {
         let helper = new DOMHelper;
         let optionsWrapper = helper.element({ tag:'div', id:'game_options', parent:this.parentElement });
@@ -332,7 +347,7 @@ class Game {
         let submitButton = helper.element({ tag:'button', type:'button', text:t('Start game'), parent:optionsWrapper });
         submitButton.addEventListener('click', this.startGame);
 
-        let connectedUsers = helper.element({ tag:'div', id:'connected_users', parent:this.parentElement });
+        let connectedUsers = helper.element({ tag:'div', class:'connected-players', parent:this.parentElement });
         this.components.playerList = new PlayerList(this, connectedUsers);
 
         // Return object with all the fields that will be referenced when starting game
@@ -341,6 +356,12 @@ class Game {
         };
     }
     
+    /**
+     * Called for users that are NOT the host when joining
+     * the server before the game has started
+     * 
+     * Shows a 'waiting for game to start' screen
+     */
     public loadAwaitGameStart() {
         let helper = new DOMHelper;
         let wrapper = helper.element({ tag:'div', id:'awaiting_game_start', parent:this.parentElement });
@@ -349,10 +370,16 @@ class Game {
         helper.element({ tag:'h2', text:t('Waiting for host to start the game...'), parent:lhs });
         helper.element({ tag:'img', src:'/images/waiting.gif', alt:t('Humorous animation of a person waiting'), parent:lhs });
         
-        let connectedUsers = helper.element({ tag:'div', id:'connected_users', parent:wrapper });
+        let connectedUsers = helper.element({ tag:'div', class:'connected-players', parent:wrapper });
         this.components.playerList = new PlayerList(this, connectedUsers);
     }
 
+    /**
+     * Run from host computer
+     * Sends message to server to start the game
+     * 
+     * @param event Click event from start button
+     */
     public startGame(event: Event) {
         let game = Game.getInstance();
         let config = JSON.stringify({
@@ -365,6 +392,11 @@ class Game {
         event.preventDefault();
     }
 
+    /**
+     * Called when new question has been initiated
+     * 
+     * @param data Array of data passed from websocket response
+     */
     public showQuestionScreen(data) {
         let helper = new DOMHelper;
         let question = data.question;
@@ -372,28 +404,44 @@ class Game {
         // Clear screen
         this.parentElement.innerHTML = '';
 
-        helper.element({ tag:'p', text:t('Question') + ' ' + data.questionNumber, parent:this.parentElement });
-        helper.element({ tag:'h1', text:question.text, parent:this.parentElement });
+        let questionWrapper = helper.element({ tag:'div', class:'question-wrapper', parent:this.parentElement });
+
+        helper.element({ tag:'p', text:t('Question') + ' ' + data.questionNumber, parent:questionWrapper });
+        helper.element({ tag:'h1', html:question.text, parent:questionWrapper });
         
         for (let opt = 0; opt < question.options.length; opt++) {
             let optionText = question.options[opt];
-            let button = helper.element({ tag:'button', value:opt, text:optionText, parent:this.parentElement, type:'button' });
+            let button = helper.element({ tag:'button', value:opt, html:optionText, parent:questionWrapper, type:'button' });
 
             button.addEventListener('click', function (event) {
-                let thisButton = <HTMLButtonElement> this;
-
-                let answer = JSON.stringify({
-                    action: "answer_submit",
-                    answer: thisButton.value
-                    // winningScore: 10,
-                    // roundTime: 30
-                });
-                game.socket.send(answer);
-
+                let game = Game.getInstance();
+                game.submitAnswer(<HTMLButtonElement> this);
                 event.preventDefault();
             });
         }
 
+        let connectedUsers = helper.element({ tag:'div', class:'connected-players', parent:this.parentElement });
+        this.components.playerList = new PlayerList(this, connectedUsers);
+    }
+
+    /**
+     * Select an answer and submit to server
+     */
+    public submitAnswer(button: HTMLButtonElement) {
+        let helper = new DOMHelper;
+        let answer = JSON.stringify({
+            action: "answer_submit",
+            answer: button.value
+            // winningScore: 10,
+            // roundTime: 30
+        });
+        game.socket.send(answer);
+        
+        // Clear question from screen
+        let questionWrapper = <HTMLElement> document.querySelector('.question-wrapper');
+        questionWrapper.innerHTML = '';
+
+        helper.element({ tag:'h1', text:t('Waiting for other players to submit answers...'), parent:questionWrapper });
     }
 
 }

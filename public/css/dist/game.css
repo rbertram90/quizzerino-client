@@ -1,0 +1,70 @@
+@import url("/css/connect-form.css");
+html {
+  height: 100%;
+}
+
+body {
+  background-color: #FFF;
+  background-image: linear-gradient(#FFF 30%, #21007F);
+  font-family: 'Source Sans Pro', Arial, sans-serif;
+  margin: 0;
+}
+
+#quiz_game {
+  max-width: 800px;
+  margin: 40px auto;
+}
+
+#quiz_game h1 {
+  margin-bottom: 2em;
+}
+
+button {
+  background-color: #21007F;
+  background: linear-gradient(#3c00e5, #21007F);
+  color: white;
+  padding: 15px 30px;
+  display: block;
+  width: 100%;
+  margin: 20px 0;
+  border: 0;
+  border-radius: 12px;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 3px 3px 5px #444;
+  transition: all .4s;
+}
+
+button:hover {
+  background: linear-gradient(#a07fff, #21007F);
+}
+
+.connected-players .player-card {
+  background: white;
+  padding: 10px;
+  border-radius: 50px;
+  margin-bottom: 20px;
+  position: relative;
+  padding-left: 100px;
+  height: 100px;
+  box-sizing: border-box;
+}
+
+.connected-players .player-card img {
+  width: 80px;
+  height: 80px;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.connected-players .player-card h4 {
+  margin: 0;
+}
+
+.connected-players .player-card .score {
+  float: right;
+  font-size: 3em;
+  font-weight: bold;
+  padding: 5px 40px 0 0;
+}

@@ -19,6 +19,8 @@ class PlayerList extends Component {
         switch (message.type) {
             case 'player_connected':
             case 'player_disconnected':
+            case 'round_start':
+            case 'player_submitted':
                 this.triggerRedraw(message);
                 break;
         }
@@ -41,6 +43,8 @@ class PlayerList extends Component {
     
             var playerWrapper = helper.element({ tag:'div', class:'player-card', parent:this.parentElement });
             // if (player.status == 'Card(s) submitted' || player.status == 'Card czar') playerWrapper.className = 'player-card player-ready';
+
+            if (!player.score) player.score = '0';
             
             helper.element({ tag:'img', src:'/images/player-icons/' + player.icon + '.png', alt:t('Player icon'), parent: playerWrapper });    
             helper.element({ tag:'span', text:player.score, class:'score', parent:playerWrapper });
