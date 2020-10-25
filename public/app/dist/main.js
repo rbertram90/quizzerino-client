@@ -1,2 +1,2 @@
-var game = Game.getInstance();
+let game = Game.getInstance();
 game.showLogin();

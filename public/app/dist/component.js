@@ -1,10 +1,9 @@
-var Component = /** @class */ (function () {
-    function Component(game) {
+class Component {
+    constructor(game) {
         this.game = null;
         this.game = game;
     }
-    Component.prototype.sendMessage = function (message) {
+    sendMessage(message) {
         // todo be implemented by sub-classes
-    };
-    return Component;
-}());
+    }
+}

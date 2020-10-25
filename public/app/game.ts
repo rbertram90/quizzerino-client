@@ -302,7 +302,10 @@ class Game {
             case 'round_start':
                 game.showQuestionScreen(data);
                 break;
-            
+
+            case 'game_end':
+                game.showGameEndedScreen(data);
+                break;
         }
 
         game.updateComponents(data);
@@ -326,33 +329,56 @@ class Game {
      * Generate the game config form
      * Fields:
      * - Which question set should be used?
-     * - @todo Time limit
-     * - @tood Winning score
+     * - @todo Time limit per question
      * 
      * @param data Data from server for the config form
      */
     public loadConfigForm(data) {
         let helper = new DOMHelper;
-        let optionsWrapper = helper.element({ tag:'div', id:'game_options', parent:this.parentElement });
+        let optionsWrapper = helper.element({ tag:'div', id:'game_options', parent:this.parentElement })
 
+        helper.element({ tag:'h2', text:t('Game settings'), parent:optionsWrapper })
+
+        helper.element({ tag:'label', parent:optionsWrapper, text:t('Question set'), for:'question_set' })
         // data is passed back in connected_game_status message - we don't have an easy
         // way to make a seperate ajax call to this WS server!
-        let options = data.quiz_options;
-        let quizSelect = helper.element({ tag:'select', parent:optionsWrapper });
+        let options = data.quiz_options
+        let quizSelect = helper.element({ tag:'select', parent:optionsWrapper, id:'question_set' })
 
-        for (var q = 0; q < options.length; q++) {
-            helper.element({ tag:'option', value:options[q].id, text:options[q].title, parent:quizSelect });
+        for (let q = 0; q < options.length; q++) {
+            helper.element({ tag:'option', value:options[q].id, text:options[q].title, parent:quizSelect })
         }
 
-        let submitButton = helper.element({ tag:'button', type:'button', text:t('Start game'), parent:optionsWrapper });
-        submitButton.addEventListener('click', this.startGame);
+        // Number of Questions
+        helper.element({ tag:'label', text:t('Number of questions'), parent:optionsWrapper })
+        let questionCount = helper.element({ tag:'input', type:'number', min:5, max:100, value:'20', parent:optionsWrapper })
 
-        let connectedUsers = helper.element({ tag:'div', class:'connected-players', parent:this.parentElement });
-        this.components.playerList = new PlayerList(this, connectedUsers);
+        // Round timer
+        helper.element({ tag:'label', text:t('Time limit per question'), for:'time_limit', parent:optionsWrapper })
+        let timeLimit = helper.element({ tag:'select', parent:optionsWrapper, id:'time_limit' })
+
+        let timeOptions = [
+            { value: '0', text: t('No time limit') },
+            { value: '1', text: '10 ' + t('seconds') },
+            { value: '2', text: '20 ' + t('seconds') },
+            { value: '3', text: '30 ' + t('seconds') }
+        ]
+        for (let a = 0; a < timeOptions.length; a++) {
+            helper.element({ tag:'option', value:timeOptions[a].value, text:timeOptions[a].text, parent:timeLimit })
+        }
+
+        // Submit button
+        let submitButton = helper.element({ tag:'button', type:'button', text:t('Start game'), parent:optionsWrapper })
+        submitButton.addEventListener('click', this.startGame)
+
+        let connectedUsers = helper.element({ tag:'div', class:'connected-players', parent:this.parentElement })
+        this.components.playerList = new PlayerList(this, connectedUsers)
 
         // Return object with all the fields that will be referenced when starting game
         return {
-            quizChoice: quizSelect
+            quizChoice: quizSelect,
+            numberOfQuestions: questionCount,
+            timeLimit: timeLimit
         };
     }
     
@@ -384,9 +410,9 @@ class Game {
         let game = Game.getInstance();
         let config = JSON.stringify({
             action: "start_game",
-            quiz: game.configForm.quizChoice.value
-            // winningScore: 10,
-            // roundTime: 30
+            quiz: game.configForm.quizChoice.value,
+            numberOfQuestions: game.configForm.numberOfQuestions.value,
+            timeLimit: game.configForm.timeLimit.value
         });
         game.socket.send(config);
         event.preventDefault();
@@ -396,6 +422,22 @@ class Game {
      * Called when new question has been initiated
      * 
      * @param data Array of data passed from websocket response
+     *
+     * Example data:
+     * {
+     *     "type":"round_start",
+     *     "question":{
+     *         "text":"What was the name of the WWF professional wrestling tag team made up of the wrestlers Ax and Smash?",
+     *         "options":["The Dream Team","Demolition","The Bushwhackers","The British Bulldogs"],
+     *         "correct_option_index":1
+     *     },
+     *     "questionNumber":1,
+     *     "roundTime":30,
+     *     "roundEndTimeUTC":"16039491630",
+     *     "players":[
+     *         {"username":"player8913","ip":"127.0.0.1","isGameHost":true,"isActive":true,"status":"Thinking...","score":0,"icon":"7"}
+     *     ]
+     * }
      */
     public showQuestionScreen(data) {
         let helper = new DOMHelper;
@@ -406,9 +448,29 @@ class Game {
 
         let questionWrapper = helper.element({ tag:'div', class:'question-wrapper', parent:this.parentElement });
 
+        // Question text
         helper.element({ tag:'p', text:t('Question') + ' ' + data.questionNumber, parent:questionWrapper });
         helper.element({ tag:'h1', html:question.text, parent:questionWrapper });
-        
+
+        // Timer
+        if (parseInt(data.roundTime) > 0) {
+            helper.element({ tag:'div', id:'round_timer', data: { 'round-end-UTC': data.roundEndTimeUTC}, parent:questionWrapper });
+            window.setInterval(function() {
+                let roundTimerElem = document.getElementById('round_timer');
+
+                // End date
+                let endDate = parseInt(roundTimerElem.dataset.roundEndUtc);
+                let now = Date.now() / 1000; // convert to seconds
+
+                // Round to 2dp
+                let remaining = Math.round((endDate - now) * 100) / 100;
+
+                // Update time remaining
+                document.getElementById('round_timer').innerText = 'Time remaining: ' + remaining.toString();
+            },10)
+        }
+
+        // Buttons
         for (let opt = 0; opt < question.options.length; opt++) {
             let optionText = question.options[opt];
             let button = helper.element({ tag:'button', value:opt, html:optionText, parent:questionWrapper, type:'button' });
@@ -420,6 +482,7 @@ class Game {
             });
         }
 
+        // Connected players display
         let connectedUsers = helper.element({ tag:'div', class:'connected-players', parent:this.parentElement });
         this.components.playerList = new PlayerList(this, connectedUsers);
     }
@@ -442,6 +505,26 @@ class Game {
         questionWrapper.innerHTML = '';
 
         helper.element({ tag:'h1', text:t('Waiting for other players to submit answers...'), parent:questionWrapper });
+    }
+
+    /**
+     * Show the scores at the end of the game
+     *
+     * @param data Array of data passed from websocket response
+     */
+    public showGameEndedScreen(data) {
+        this.parentElement.innerHTML = '';
+        let helper = new DOMHelper;
+        let wrapper = helper.element({ tag:'div', id:'game_ended', parent:this.parentElement });
+
+        helper.element({ tag:'h1', text:t('Game ended'), parent:wrapper });
+        helper.element({ tag:'h2', text:t('Thank you for playing'), parent:wrapper });
+
+        for (let p = 0; p < data.players.length; p++) {
+            let playerWrapper = helper.element({ tag:'div', class:'player-score', parent:wrapper });
+            helper.element({ tag:'p', class:'player-name', text:data.players[p].username, parent:playerWrapper });
+            helper.element({ tag:'p', class:'player-score', text:data.players[p].score, parent:playerWrapper });
+        }
     }
 
 }

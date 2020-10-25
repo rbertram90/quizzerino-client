@@ -1,24 +1,21 @@
-var DOMHelperData = /** @class */ (function () {
-    function DOMHelperData() {
+class DOMHelperData {
+    constructor() {
         this.text = '';
         this.html = '';
-        this["class"] = '';
+        this.class = '';
         this.id = '';
         this.src = '';
         this.alt = '';
-        this["for"] = '';
+        this.for = '';
         this.name = '';
     }
-    return DOMHelperData;
-}());
-var DOMHelper = /** @class */ (function () {
-    function DOMHelper() {
-    }
-    DOMHelper.prototype.element = function (data) {
-        var element;
+}
+class DOMHelper {
+    element(data) {
+        let element;
         switch (data.tag) {
             case 'input':
-                var inputElement = document.createElement(data.tag);
+                let inputElement = document.createElement(data.tag);
                 if (data.placeholder)
                     inputElement.placeholder = data.placeholder;
                 if (data.value)
@@ -27,10 +24,14 @@ var DOMHelper = /** @class */ (function () {
                     inputElement.name = data.name;
                 if (data.type)
                     inputElement.type = data.type;
+                if (data.type == 'number' && data.min)
+                    inputElement.min = data.min.toString();
+                if (data.type == 'number' && data.max)
+                    inputElement.max = data.max.toString();
                 element = inputElement;
                 break;
             case 'img':
-                var imageElement = document.createElement(data.tag);
+                let imageElement = document.createElement(data.tag);
                 if (data.src)
                     imageElement.src = data.src;
                 if (data.alt)
@@ -38,7 +39,7 @@ var DOMHelper = /** @class */ (function () {
                 element = imageElement;
                 break;
             case 'button':
-                var buttonElement = document.createElement(data.tag);
+                let buttonElement = document.createElement(data.tag);
                 if (data.value)
                     buttonElement.value = data.value.toString();
                 if (data.type)
@@ -46,7 +47,7 @@ var DOMHelper = /** @class */ (function () {
                 element = buttonElement;
                 break;
             case 'option':
-                var optionElement = document.createElement(data.tag);
+                let optionElement = document.createElement(data.tag);
                 if (data.value)
                     optionElement.value = data.value.toString();
                 element = optionElement;
@@ -61,12 +62,12 @@ var DOMHelper = /** @class */ (function () {
         else if (data.html)
             element.innerHTML = data.html;
         // Attributes
-        if (data["class"])
-            element.className = data["class"];
+        if (data.class)
+            element.className = data.class;
         if (data.id)
             element.id = data.id;
-        if (data["for"])
-            element.setAttribute('for', data["for"]);
+        if (data.for)
+            element.setAttribute('for', data.for);
         if (data.data) {
             Object.keys(data.data).forEach(function (key, index) {
                 element.setAttribute('data-' + key, data.data[key]);
@@ -76,12 +77,12 @@ var DOMHelper = /** @class */ (function () {
             data.parent.appendChild(element);
         }
         return element;
-    };
-    DOMHelper.prototype.label = function (data) {
+    }
+    label(data) {
         data.tag = 'label';
         return this.element(data);
-    };
-    DOMHelper.prototype.dropdown = function (data) {
+    }
+    dropdown(data) {
         data.tag = 'select';
         var elem = this.element(data);
         for (var i = 0; i < data.options.length; i++) {
@@ -89,6 +90,5 @@ var DOMHelper = /** @class */ (function () {
             elem.appendChild(option);
         }
         return elem;
-    };
-    return DOMHelper;
-}());
+    }
+}

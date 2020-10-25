@@ -27,15 +27,15 @@
 <body>
     <script>
     <?php if ($lang == 'en'): ?>
-        var translations = {};
+        let translations = {};
     <?php else: ?>
-        var translations = <?php print json_encode(Translate::getTranslations()); ?>;
+        let translations = <?php print json_encode(Translate::getTranslations()); ?>;
     <?php endif; ?>
 
     <?php if (file_exists(__DIR__ .'/../config.json')): ?>
-        var config = <?php include (__DIR__ .'/../config.json') ?>;
+        let config = <?php include (__DIR__ .'/../config.json') ?>;
     <?php else: ?>
-        var config = {};
+        let config = {};
     <?php endif; ?>
     </script>
 

@@ -3,12 +3,12 @@
         "module": "commonjs",
         "target": "es2016",
         "jsx": "preserve",
-        "sourceMap": true
+        "sourceMap": false,
+        "outDir": "public/app/dist"
     },
     "exclude": [
         "node_modules",
-        "**/node_modules/*",
-        "public/app/dist"
+        "**/node_modules/*"
     ],
     "files": [
         "public/app/domhelper.ts",

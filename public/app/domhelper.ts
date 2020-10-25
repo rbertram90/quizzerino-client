@@ -10,10 +10,12 @@ class DOMHelperData {
     public name?: string = '';
     public value?: string|number;
     public type?: string;
+    public min?: number;
+    public max?: number;
     public placeholder?: string;
     public data?: object;
     public parent?: HTMLElement;
-    public options?: string[];
+    public options?: string[]; // dropdown options
     public checked?: boolean;
 }
 
@@ -30,6 +32,8 @@ class DOMHelper {
                 if (data.value) inputElement.value = data.value.toString();
                 if (data.name) inputElement.name = data.name;
                 if (data.type) inputElement.type = data.type;
+                if (data.type == 'number' && data.min) inputElement.min = data.min.toString();
+                if (data.type == 'number' && data.max) inputElement.max = data.max.toString();
                 element = inputElement;
                 break;
             case 'img':
