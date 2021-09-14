@@ -80,9 +80,21 @@ class DOMHelper {
         return element;
     }
 
-    public label(data: DOMHelperData) {
+    public label(data) {
         data.tag = 'label';
         return this.element(data);
+    }
+
+    public textField(data) {
+        data.tag = 'input'
+        data.type = 'text'
+    
+        if (data.label && data.parent && data.id) {
+            var label = this.label({ for: data.id, html:data.label })
+            data.parent.appendChild(label)
+        }
+    
+        return this.element(data)
     }
 
     public dropdown(data: DOMHelperData) {
@@ -95,6 +107,26 @@ class DOMHelper {
         }
     
         return elem;
+    }
+
+    public checkbox(data) {
+        data.tag = 'input'
+        data.type = 'checkbox'
+
+        // Generate element first, so label appended after
+        let element = this.element(data)
+
+        if (data.label && data.parent && data.id) {
+            var label = this.label({ for: data.id, html:data.label })
+            data.parent.appendChild(label)
+        }
+
+        return element
+    }
+
+    public div(data) {
+        data.tag = 'div';
+        return this.element(data);
     }
 
 }

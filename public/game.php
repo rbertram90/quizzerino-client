@@ -56,6 +56,8 @@
     <script src="/app/dist/component.js"></script>
     <script src="/app/dist/player.js"></script>
     <script src="/app/dist/playerlist.js"></script>
+    <script src="/app/dist/gameconfigform.js"></script>
+    <script src="/app/dist/connectform.js"></script>
     <script src="/app/dist/game.js"></script>
     <script src="/app/dist/main.js"></script>
 

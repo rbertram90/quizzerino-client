@@ -82,6 +82,15 @@ class DOMHelper {
         data.tag = 'label';
         return this.element(data);
     }
+    textField(data) {
+        data.tag = 'input';
+        data.type = 'text';
+        if (data.label && data.parent && data.id) {
+            var label = this.label({ for: data.id, html: data.label });
+            data.parent.appendChild(label);
+        }
+        return this.element(data);
+    }
     dropdown(data) {
         data.tag = 'select';
         var elem = this.element(data);
@@ -90,5 +99,20 @@ class DOMHelper {
             elem.appendChild(option);
         }
         return elem;
+    }
+    checkbox(data) {
+        data.tag = 'input';
+        data.type = 'checkbox';
+        // Generate element first, so label appended after
+        let element = this.element(data);
+        if (data.label && data.parent && data.id) {
+            var label = this.label({ for: data.id, html: data.label });
+            data.parent.appendChild(label);
+        }
+        return element;
+    }
+    div(data) {
+        data.tag = 'div';
+        return this.element(data);
     }
 }

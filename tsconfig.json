@@ -4,19 +4,16 @@
         "target": "es2016",
         "jsx": "preserve",
         "sourceMap": false,
-        "outDir": "public/app/dist"
+        "outDir": "public/app/dist",
+        "alwaysStrict": false,
+        "importHelpers": false
     },
+    "compileOnSave": true,
     "exclude": [
         "node_modules",
         "**/node_modules/*"
     ],
-    "files": [
-        "public/app/domhelper.ts",
-        "public/app/translate.ts",
-        "public/app/component.ts",
-        "public/app/player.ts",
-        "public/app/playerlist.ts",
-        "public/app/game.ts",
-        "public/app/main.ts"
+    "include": [
+        "public/app/*"
     ]
 }

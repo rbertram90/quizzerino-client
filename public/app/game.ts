@@ -6,10 +6,9 @@ class ConnectionData {
 }
 
 class Game {
-
-    protected lastConnection: ConnectionData;
+    protected lastConnection: ConnectionData; // details used to connect on the users previous game
     protected parentElement: HTMLElement = null;
-    protected static instance : Game = null;
+    protected static instance : Game = null; // game object
     protected connectForm = null;
     protected configForm = null;
     protected socket: WebSocket = null;
@@ -33,154 +32,6 @@ class Game {
         else {
             return new Game();
         }
-    }
-
-    public showLogin() {
-        let username: string;
-        let host: string;
-        let port: string|number;
-        let default_icon: string;
-        let remember_me: boolean;
-        let lastConnection : string;
-        let helper = new DOMHelper();
-    
-        // Get last values
-        if (lastConnection = window.localStorage.getItem('last_server_connection')) {
-            this.lastConnection = JSON.parse(lastConnection);
-            host = this.lastConnection.host;
-            port = this.lastConnection.port;
-            username = this.lastConnection.username;
-            default_icon = this.lastConnection.icon;
-            remember_me = true;
-        }
-        else {
-            // Defaults
-            host = '127.0.0.1';
-            port = 8080;
-            username = 'player' + Date.now().toString().substr(-4);
-            remember_me = false;
-        }
-    
-        // Check if the host/port has been provided in URL
-        if (window.location.search) {
-            var searchParts = window.location.search.substring(1).split('&');
-            for (var p = 0; p < searchParts.length; p++) {
-                var varParts = searchParts[p].split('=');
-                if (varParts[0] == 'host') {
-                    host = varParts[1];
-                }
-                if (varParts[0] == 'port') {
-                    port = varParts[1];
-                }
-            }
-        }
-    
-        if (!default_icon) {
-            default_icon = (Math.floor(Math.random() * 20) + 1).toString();
-        }
-    
-        // Form
-        var connectForm = document.createElement('form');
-        connectForm.id = 'connect_form';
-    
-        // Heading
-        var title = helper.element({ tag: 'h2', text: t('Connect to game server') });
-        connectForm.appendChild(title);
-    
-        // Placeholder for errors
-        var errorWrapper = helper.element({ tag:'div', class:'errors' });
-        connectForm.appendChild(errorWrapper);
-    
-        // Host
-        var hostWrapper = helper.element({ tag:'div', class:'field', id:'field_host' });
-        connectForm.appendChild(hostWrapper);
-        var hostLabel = helper.element({ tag:'label', for:'connect_host', text: t('Host') });
-        hostWrapper.appendChild(hostLabel);
-        var hostField = helper.element({ tag:'input', type: 'text', id:'connect_host', value: host });
-        hostField.setAttribute('required', 'required');
-        hostWrapper.appendChild(hostField);
-    
-        // Port
-        var portWrapper = helper.element({ tag:'div', class:'field', id:'field_port' });
-        connectForm.appendChild(portWrapper);
-        var portLabel = helper.element({ tag:'label', for:'connect_port', text: t('Port') });
-        portWrapper.appendChild(portLabel);
-        var portField = helper.element({ tag:'input', type: 'text', id:'connect_port', value: port });
-        portField.setAttribute('required', 'required');
-        portField.setAttribute('size', '4');
-        portWrapper.appendChild(portField);
-    
-        // Username
-        var usernameWrapper = helper.element({ tag:'div', class:'field', id:'field_username' });
-        connectForm.appendChild(usernameWrapper);
-        var usernameLabel = helper.element({ tag:'label', for:'username', text: t('Username') });
-        usernameWrapper.appendChild(usernameLabel);
-        var usernameField = helper.element({ tag:'input', type: 'text', id:'username', value: username });
-        usernameField.setAttribute('required', 'required');
-        usernameWrapper.appendChild(usernameField);
-    
-        var rememberMeWrapper = helper.element({ tag:'div', class: 'field', id: 'field_remember' });
-        var rememberMe = <HTMLInputElement> helper.element({ tag: 'input', id: 'remember_me', type: 'checkbox' });
-        var rememberMeLabel = helper.element({ tag: 'label', for: 'remember_me', text: t('Remember these details') });
-        if (remember_me) {
-            rememberMe.checked = true;
-        }
-    
-        rememberMeWrapper.appendChild(rememberMe);
-        rememberMeWrapper.appendChild(rememberMeLabel);
-        connectForm.appendChild(rememberMeWrapper);
-    
-        // Icon
-        var iconWrapper = helper.element({ tag:'div', class:'field', id:'field_icon' });
-        var iconLabel = helper.element({ tag:'label', for:'icon', text:t('Player face') });
-        var iconField = <HTMLInputElement> helper.element({ tag:'input', type:'hidden', name:'icon', value:default_icon });
-        iconWrapper.appendChild(iconLabel);
-        iconWrapper.appendChild(iconField);
-    
-        for (var i = 1; i <= 28; i++) {
-            var icon = <HTMLImageElement> helper.element({ tag: 'img', src: '/images/player-icons/' + i + '.png', class: 'player-icon',
-                alt: 'Player icon ' + i, data: { index:i } });
-            if (i.toString() == default_icon) icon.className = 'player-icon selected';
-    
-            icon.addEventListener('click', function() {
-                iconField.value = this.dataset.index;
-                var elements = document.querySelectorAll('#field_icon img.player-icon');
-    
-                for (var e = 0; e < elements.length; e++) {
-                    elements[e].className = 'player-icon';
-                }
-    
-                this.className = 'player-icon selected';
-            });
-            iconWrapper.appendChild(icon);
-        }
-        connectForm.appendChild(iconWrapper);
-    
-        // Actions
-        var actionsWrapper = document.createElement('div');
-        actionsWrapper.className = 'actions';
-        connectForm.appendChild(actionsWrapper);
-    
-        var submitButton = document.createElement('button');
-        submitButton.id = 'connect_button';
-        submitButton.type = 'button';
-        submitButton.innerText = t('Connect');
-        actionsWrapper.appendChild(submitButton);
-    
-        submitButton.addEventListener('click', this.openConnection);
-    
-        this.parentElement.appendChild(connectForm);
-    
-        this.connectForm = {
-            form: connectForm,
-            errors: errorWrapper,
-            host: hostField,
-            port: portField,
-            username: usernameField,
-            rememberMe: rememberMe,
-            icon: iconField,
-            submitButton: submitButton
-        };
     }
 
     public openConnection(event: Event) {
@@ -281,7 +132,9 @@ class Game {
                     case 0:
                         if (data.host == null || data.host.username == username) {
                             // Show configure game options screen
-                            game.configForm = game.loadConfigForm(data);
+                            let configForm = new GameConfigForm(game, game.parentElement)
+                            game.configForm = configForm.generate(data)
+                            game.createPlayerList()
                         }
                         else {
                             // Show awaiting game start screen
@@ -292,7 +145,7 @@ class Game {
                 break;
 
             case 'player_connected':
-                // Check if the player that connected is local player
+                // Check if the player that connected is local player test
                 // If they are game host then enable buttons
                 if (data.host) {
                     game.clientIsGameHost = true;
@@ -324,64 +177,15 @@ class Game {
             }
         }
     }
-
-    /**
-     * Generate the game config form
-     * Fields:
-     * - Which question set should be used?
-     * - @todo Time limit per question
-     * 
-     * @param data Data from server for the config form
-     */
-    public loadConfigForm(data) {
-        let helper = new DOMHelper;
-        let optionsWrapper = helper.element({ tag:'div', id:'game_options', parent:this.parentElement })
-
-        helper.element({ tag:'h2', text:t('Game settings'), parent:optionsWrapper })
-
-        helper.element({ tag:'label', parent:optionsWrapper, text:t('Question set'), for:'question_set' })
-        // data is passed back in connected_game_status message - we don't have an easy
-        // way to make a seperate ajax call to this WS server!
-        let options = data.quiz_options
-        let quizSelect = helper.element({ tag:'select', parent:optionsWrapper, id:'question_set' })
-
-        for (let q = 0; q < options.length; q++) {
-            helper.element({ tag:'option', value:options[q].id, text:options[q].title, parent:quizSelect })
-        }
-
-        // Number of Questions
-        helper.element({ tag:'label', text:t('Number of questions'), parent:optionsWrapper })
-        let questionCount = helper.element({ tag:'input', type:'number', min:5, max:100, value:'20', parent:optionsWrapper })
-
-        // Round timer
-        helper.element({ tag:'label', text:t('Time limit per question'), for:'time_limit', parent:optionsWrapper })
-        let timeLimit = helper.element({ tag:'select', parent:optionsWrapper, id:'time_limit' })
-
-        let timeOptions = [
-            { value: '0', text: t('No time limit') },
-            { value: '1', text: '10 ' + t('seconds') },
-            { value: '2', text: '20 ' + t('seconds') },
-            { value: '3', text: '30 ' + t('seconds') }
-        ]
-        for (let a = 0; a < timeOptions.length; a++) {
-            helper.element({ tag:'option', value:timeOptions[a].value, text:timeOptions[a].text, parent:timeLimit })
-        }
-
-        // Submit button
-        let submitButton = helper.element({ tag:'button', type:'button', text:t('Start game'), parent:optionsWrapper })
-        submitButton.addEventListener('click', this.startGame)
-
-        let connectedUsers = helper.element({ tag:'div', class:'connected-players', parent:this.parentElement })
-        this.components.playerList = new PlayerList(this, connectedUsers)
-
-        // Return object with all the fields that will be referenced when starting game
-        return {
-            quizChoice: quizSelect,
-            numberOfQuestions: questionCount,
-            timeLimit: timeLimit
-        };
-    }
     
+    /**
+     * Instantiate the connect to server form
+     */
+    public showLogin() {
+        let connectForm = new ConnectForm(this, this.parentElement, this.lastConnection);
+        this.connectForm = connectForm.generate()
+    }
+
     /**
      * Called for users that are NOT the host when joining
      * the server before the game has started
@@ -398,6 +202,15 @@ class Game {
         
         let connectedUsers = helper.element({ tag:'div', class:'connected-players', parent:wrapper });
         this.components.playerList = new PlayerList(this, connectedUsers);
+    }
+
+    /**
+     * Update the playerlist view
+     */
+    public createPlayerList() {
+        let helper = new DOMHelper;
+        let connectedUsers = helper.element({ tag:'div', class:'connected-players', parent:this.parentElement })
+        this.components.playerList = new PlayerList(this, connectedUsers)
     }
 
     /**
