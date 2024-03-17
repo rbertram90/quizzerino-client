@@ -1,4 +1,5 @@
-@import url("/css/connect-form.css");
+@use "src/connect-form";
+@use "src/options-form";
 
 $deep_purple: #21007F;
 

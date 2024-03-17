@@ -42,8 +42,8 @@ class DOMHelper {
                 let buttonElement = document.createElement(data.tag);
                 if (data.value)
                     buttonElement.value = data.value.toString();
-                if (data.type)
-                    buttonElement.type = data.type;
+                if (data.buttonType)
+                    buttonElement.type = data.buttonType;
                 element = buttonElement;
                 break;
             case 'option':

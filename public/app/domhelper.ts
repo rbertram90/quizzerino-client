@@ -10,6 +10,7 @@ class DOMHelperData {
     public name?: string = '';
     public value?: string|number;
     public type?: string;
+    public buttonType?: "button"|"submit"|"reset"
     public min?: number;
     public max?: number;
     public placeholder?: string;
@@ -45,7 +46,7 @@ class DOMHelper {
             case 'button':
                 let buttonElement = <HTMLButtonElement> document.createElement(data.tag);
                 if (data.value) buttonElement.value = data.value.toString();
-                if (data.type) buttonElement.type = data.type;
+                if (data.buttonType) buttonElement.type = data.buttonType;
                 element = buttonElement;
                 break;
             case 'option':
