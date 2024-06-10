@@ -1,18 +1,16 @@
-class PlayerList extends Component {
+import { Game } from "../game";
 
-    protected game: Game = null;
-    protected parentElement: HTMLElement = null;
+export default class PlayerList extends Component {
+
     protected players : Player[] = [];
 
     /**
      * PlayerList component
      * 
      * @param game Game object
-     * @param parent Element to attach player list to
      */
-    public constructor(game: Game, parent: HTMLElement) {
+    public constructor(game: Game) {
         super(game);
-        this.parentElement = parent;
     }
 
     public sendMessage(message) {
@@ -32,16 +30,24 @@ class PlayerList extends Component {
     };
 
     public redraw() {
-        let helper = new DOMHelper;
-        this.parentElement.innerHTML = '';
-    
-        helper.element({ tag:'h2', text:t('Players'), parent:this.parentElement });
-    
+        let helper = this.game.service('domhelper');
+
+        let cardWrapper = document.querySelector('.connected-players');
+        if (!cardWrapper) {
+            cardWrapper = helper.div({ class: 'connected-players' });
+            this.game.window().appendElement(cardWrapper);
+        }
+        else {
+            cardWrapper.innerHTML = "";
+        }
+
+        helper.element({ tag:'h2', text:t('Players'), parent: cardWrapper });
+
         for (var p = 0; p < this.players.length; p++) {
             var player = this.players[p];
             if (!player.isActive) continue;
     
-            var playerWrapper = helper.element({ tag:'div', class:'player-card', parent:this.parentElement });
+            var playerWrapper = helper.element({ tag:'div', class:'player-card' });
             // if (player.status == 'Card(s) submitted' || player.status == 'Card czar') playerWrapper.className = 'player-card player-ready';
 
             if (!player.score) player.score = '0';
@@ -50,6 +56,8 @@ class PlayerList extends Component {
             helper.element({ tag:'span', text:player.score, class:'score', parent:playerWrapper });
             helper.element({ tag:'h4', text:player.username, parent:playerWrapper });
             helper.element({ tag:'p', text:t(player.status), parent:playerWrapper });
+
+            cardWrapper.appendChild(playerWrapper);
         }
     }
 

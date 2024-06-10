@@ -21,7 +21,7 @@
     <link rel="stylesheet" type="text/css" href="/css/dist/game.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet">
-    <link href="/images/favicon.png" type="image/png" rel="icon">
+    <!-- <link href="/images/favicon.png" type="image/png" rel="icon"> -->
     <!-- https://www.dafont.com/karmatic-arcade.font -->
 </head>
 <body>
@@ -51,15 +51,20 @@
     <script src="/app/components/RoundSubmissions.js"></script>
     <script src="/app/components/PlayerDeck.js"></script>
 -->
-    <script src="/app/dist/domhelper.js"></script>
+    <!-- Core / utils  
+    <script src="/app/dist/domhelper.js"></script>-->
     <script src="/app/dist/translate.js"></script>
-    <script src="/app/dist/component.js"></script>
+
+    <!-- Model -->
     <script src="/app/dist/player.js"></script>
-    <script src="/app/dist/playerlist.js"></script>
-    <script src="/app/dist/gameconfigform.js"></script>
-    <script src="/app/dist/connectform.js"></script>
-    <script src="/app/dist/game.js"></script>
-    <script src="/app/dist/main.js"></script>
+
+    <!-- Components -->
+    <script src="/app/dist/component.js"></script>
+    <script src="/app/dist/components/playerlist.js"></script>
+    <!-- <script src="/app/dist/gameconfigform.js"></script>
+    <script src="/app/dist/connectform.js"></script>-->
+    <!-- <script src="/app/dist/game.js" type="module"></script> -->
+    <script src="/app/dist/main.js" type="module"></script>
 
 </body>
 </html>

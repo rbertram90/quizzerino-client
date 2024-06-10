@@ -1,3 +1,5 @@
+// import { Game } from "./game.js";
+
 class Component {
 
     protected game: Game = null;
@@ -11,3 +13,5 @@ class Component {
     }
 
 }
+
+// export default Component;

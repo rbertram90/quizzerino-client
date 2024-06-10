@@ -116,3 +116,5 @@ class DOMHelper {
         return this.element(data);
     }
 }
+export { DOMHelper, DOMHelperData };
+//# sourceMappingURL=domhelper.js.map

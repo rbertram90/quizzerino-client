@@ -1,3 +1,4 @@
+// import { Game } from "./game.js";
 class Component {
     constructor(game) {
         this.game = null;
@@ -7,3 +8,5 @@ class Component {
         // todo be implemented by sub-classes
     }
 }
+// export default Component;
+//# sourceMappingURL=component.js.map

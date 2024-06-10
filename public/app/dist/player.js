@@ -4,3 +4,4 @@ class Player {
         this.game = game;
     }
 }
+//# sourceMappingURL=player.js.map

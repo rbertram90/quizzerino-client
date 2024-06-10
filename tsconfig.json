@@ -1,9 +1,8 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
         "target": "es2016",
         "jsx": "preserve",
-        "sourceMap": false,
+        "sourceMap": true,
         "outDir": "public/app/dist",
         "alwaysStrict": false,
         "importHelpers": false
@@ -14,6 +13,10 @@
         "**/node_modules/*"
     ],
     "include": [
-        "public/app/*"
+        "public/app/**/*.ts",
+        // "public/app/views/playerlist.ts",
+        // "public/app/views/questionpage.ts",
+        // "public/app/views/connectform.ts",
+        // "public/app/views/gameconfigform.ts"
     ]
 }

@@ -12,3 +12,4 @@ function t(string) {
         return translations[string];
     }
 }
+//# sourceMappingURL=translate.js.map

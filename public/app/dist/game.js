@@ -1,63 +1,72 @@
-class ConnectionData {
+import { DOMHelper } from "./domhelper.js";
+import PlayerList from "./views/playerlist.js";
+import { FormManager } from "./FormManager.js";
+class ServiceContainer {
+    constructor() {
+        this.domhelper = new DOMHelper;
+        this.formManager = new FormManager(this);
+    }
+}
+class GameWindow {
+    constructor(element) {
+        this.element = null;
+        this.element = element;
+        document.body.appendChild(element);
+    }
+    clear() {
+        this.element.innerHTML = "";
+    }
+    appendElement(parent) {
+        this.element.appendChild(parent);
+        // this.element.innerHTML = html;
+    }
+    addEventListener(type, callback) {
+        this.element.addEventListener(type, callback);
+    }
+    dispatchEvent(event) {
+        this.element.dispatchEvent(event);
+    }
 }
 class Game {
-    constructor() {
-        this.parentElement = null;
-        this.connectForm = null;
-        this.configForm = null;
+    constructor(gamewindow, serviceContainer) {
         this.socket = null;
         this.clientIsGameHost = false;
         this.player = null;
-        this.components = {
-            playerList: null
-        };
-        let helper = new DOMHelper();
-        this.parentElement = helper.element({ tag: 'div', id: 'quiz_game' });
-        document.body.appendChild(this.parentElement);
+        this.components = { playerList: null };
+        this.services = null;
+        this.services = serviceContainer;
+        this.gamewindow = gamewindow;
+        this.formManager = this.services.formManager;
+        this.formManager.forms.connectForm.setSubmitCallback(this.createServerConnection.bind(this));
+        this.formManager.forms.configForm.setSubmitCallback(this.startGame.bind(this));
+        this.components.playerList = new PlayerList(this);
         Game.instance = this;
     }
-    static getInstance() {
+    static getInstance(gamewindow = null, serviceContainer) {
         if (Game.instance) {
             return Game.instance;
         }
         else {
-            return new Game();
+            return new Game(gamewindow, serviceContainer);
         }
     }
-    openConnection(event) {
-        var game = Game.getInstance();
-        var form = game.connectForm;
-        // Validate form
-        if (form.username.value.length == 0) {
-            form.errors.innerHTML = '<p class="error">' + t('Please enter a username') + '</p>';
-            return;
-        }
-        if (form.host.value.length == 0) {
-            form.errors.innerHTML = '<p class="error">' + t('Please enter the hosts IP address') + '</p>';
-            return;
-        }
-        if (form.port.value.length == 0) {
-            form.errors.innerHTML = '<p class="error">' + t('Please enter the hosts port number (8080 by default)') + '</p>';
-            return;
-        }
-        form.username.disabled = true;
-        form.submitButton.disabled = true;
-        form.host.disabled = true;
-        form.port.disabled = true;
-        game.createServerConnection();
-        event.preventDefault();
+    window() {
+        return this.gamewindow;
+    }
+    service(service) {
+        return this.services[service];
     }
     createServerConnection() {
         let game = this;
-        let form = game.connectForm;
-        form.errors.innerHTML = '<p class="info loader"><img src="/images/ajax-loader.gif">' + t('Connecting to server') + '</p>';
-        let host = form.host.value;
-        let port = form.port.value;
-        let username = form.username.value;
-        let icon = form.icon.value;
-        let rememberMe = form.rememberMe.checked;
-        game.socket = new WebSocket('ws://' + host + ':' + port);
-        game.socket.onopen = function (e) {
+        let form = this.formManager.forms.connectForm;
+        form.data.errors.innerHTML = '<p class="info loader"><img src="/images/ajax-loader.gif">' + t('Connecting to server') + '</p>';
+        let host = form.data.host.value;
+        let port = form.data.port.value;
+        let username = form.data.username.value;
+        let icon = form.data.icon.value;
+        let rememberMe = form.data.rememberMe.checked;
+        this.socket = new WebSocket('ws://' + host + ':' + port);
+        this.socket.onopen = function () {
             // Show either waiting for game to start or game options
             game.socket.send('{ "action": "player_connected", "username": "' + username + '", "icon": "' + icon + '" }');
             if (rememberMe) {
@@ -72,42 +81,42 @@ class Game {
                 window.localStorage.removeItem('last_server_connection');
             }
         };
-        game.socket.onmessage = game.handleMessage;
-        game.socket.onclose = function (event) {
-            let form = Game.getInstance().connectForm;
+        this.socket.onmessage = this.handleMessage.bind(this);
+        this.socket.onclose = ((event) => {
+            // console.log('socket closed');
+            let form = this.formManager.forms.connectForm;
             if (form) {
-                form.errors.innerHTML = '<p class="error">' + t('Connection to server failed') + "</p>";
-                form.username.disabled = false;
-                form.submitButton.disabled = false;
-                form.host.disabled = false;
-                form.port.disabled = false;
+                form.data.errors.innerHTML = '<p class="error">' + t('Connection to server failed') + "</p>";
+                form.data.username.disabled = false;
+                form.data.submitButton.disabled = false;
+                form.data.host.disabled = false;
+                form.data.port.disabled = false;
             }
             else {
                 // Lazy way to reset everything...
                 // Ideally would show an error message saying connection lost
                 window.location.reload();
             }
-        };
+        }).bind(this);
     }
     handleMessage(message) {
         let data = JSON.parse(message.data);
-        let game = Game.getInstance();
+        let game = this;
         switch (data.type) {
             case 'connected_game_status':
-                var username = game.connectForm.username.value;
-                // Remove connect form from DOM
-                game.connectForm.form.parentElement.removeChild(game.connectForm.form);
-                game.connectForm = null;
+                const connectForm = game.formManager.forms.connectForm;
+                const username = connectForm.data.username.value;
+                const configForm = game.formManager.forms.configForm;
                 // Create player
                 game.player = new Player(game, username);
                 switch (data.game_status) {
                     // Awaiting game start
                     case 0:
-                        if (data.host == null || data.host.username == username) {
+                        if (data.host == null || data.host.isGameHost) {
+                            this.gamewindow.clear();
                             // Show configure game options screen
-                            let configForm = new GameConfigForm(game, game.parentElement);
-                            game.configForm = configForm.generate(data);
-                            game.createPlayerList();
+                            this.gamewindow.appendElement(configForm.generate(data));
+                            this.components.playerList.redraw();
                         }
                         else {
                             // Show awaiting game start screen
@@ -149,8 +158,7 @@ class Game {
      * Instantiate the connect to server form
      */
     showLogin() {
-        let connectForm = new ConnectForm(this, this.parentElement, this.lastConnection);
-        this.connectForm = connectForm.generate();
+        this.gamewindow.appendElement(this.services.formManager.forms.connectForm.generate());
     }
     /**
      * Called for users that are NOT the host when joining
@@ -159,21 +167,14 @@ class Game {
      * Shows a 'waiting for game to start' screen
      */
     loadAwaitGameStart() {
-        let helper = new DOMHelper;
-        let wrapper = helper.element({ tag: 'div', id: 'awaiting_game_start', parent: this.parentElement });
+        let helper = this.services.domhelper;
+        let wrapper = helper.element({ tag: 'div', id: 'awaiting_game_start' });
         let lhs = helper.element({ tag: 'div', class: 'waiting_panel', parent: wrapper });
         helper.element({ tag: 'h2', text: t('Waiting for host to start the game...'), parent: lhs });
         helper.element({ tag: 'img', src: '/images/waiting.gif', alt: t('Humorous animation of a person waiting'), parent: lhs });
-        let connectedUsers = helper.element({ tag: 'div', class: 'connected-players', parent: wrapper });
-        this.components.playerList = new PlayerList(this, connectedUsers);
-    }
-    /**
-     * Update the playerlist view
-     */
-    createPlayerList() {
-        let helper = new DOMHelper;
-        let connectedUsers = helper.element({ tag: 'div', class: 'connected-players', parent: this.parentElement });
-        this.components.playerList = new PlayerList(this, connectedUsers);
+        // let connectedUsers = helper.element({ tag:'div', class:'connected-players', parent:wrapper });
+        // this.components.playerList = new PlayerList(this);
+        this.gamewindow.appendElement(wrapper);
     }
     /**
      * Run from host computer
@@ -181,16 +182,15 @@ class Game {
      *
      * @param event Click event from start button
      */
-    startGame(event) {
-        let game = Game.getInstance();
+    startGame() {
+        let configForm = this.services.formManager.forms.configForm;
         let config = JSON.stringify({
             action: "start_game",
-            quiz: game.configForm.quizChoice.value,
-            numberOfQuestions: game.configForm.numberOfQuestions.value,
-            timeLimit: game.configForm.timeLimit.value
+            quiz: configForm.quizSelect.value,
+            numberOfQuestions: configForm.questionCount.value,
+            timeLimit: configForm.timeLimit.value
         });
-        game.socket.send(config);
-        event.preventDefault();
+        this.socket.send(config);
     }
     /**
      * Called when new question has been initiated
@@ -216,9 +216,9 @@ class Game {
     showQuestionScreen(data) {
         let helper = new DOMHelper;
         let question = data.question;
-        // Clear screen
-        this.parentElement.innerHTML = '';
-        let questionWrapper = helper.element({ tag: 'div', class: 'question-wrapper', parent: this.parentElement });
+        let game = this;
+        this.gamewindow.clear();
+        let questionWrapper = helper.element({ tag: 'div', class: 'question-wrapper' });
         // Question text
         helper.element({ tag: 'p', text: t('Question') + ' ' + data.questionNumber, parent: questionWrapper });
         helper.element({ tag: 'h1', html: question.text, parent: questionWrapper });
@@ -241,14 +241,16 @@ class Game {
             let optionText = question.options[opt];
             let button = helper.element({ tag: 'button', value: opt, html: optionText, parent: questionWrapper, type: 'button' });
             button.addEventListener('click', function (event) {
-                let game = Game.getInstance();
                 game.submitAnswer(this);
                 event.preventDefault();
             });
         }
+        this.gamewindow.appendElement(questionWrapper);
         // Connected players display
-        let connectedUsers = helper.element({ tag: 'div', class: 'connected-players', parent: this.parentElement });
-        this.components.playerList = new PlayerList(this, connectedUsers);
+        // const connectedUsers = helper.element({ tag:'div', class:'connected-players' });
+        // this.components.playerList = new PlayerList(this);
+        // this.gamewindow.appendElement(connectedUsers);
+        // this.components.playerList.redraw();
     }
     /**
      * Select an answer and submit to server
@@ -261,7 +263,7 @@ class Game {
             // winningScore: 10,
             // roundTime: 30
         });
-        game.socket.send(answer);
+        this.socket.send(answer);
         // Clear question from screen
         let questionWrapper = document.querySelector('.question-wrapper');
         questionWrapper.innerHTML = '';
@@ -273,9 +275,9 @@ class Game {
      * @param data Array of data passed from websocket response
      */
     showGameEndedScreen(data) {
-        this.parentElement.innerHTML = '';
+        this.gamewindow.clear();
         let helper = new DOMHelper;
-        let wrapper = helper.element({ tag: 'div', id: 'game_ended', parent: this.parentElement });
+        let wrapper = helper.element({ tag: 'div', id: 'game_ended' });
         helper.element({ tag: 'h1', text: t('Game ended'), parent: wrapper });
         helper.element({ tag: 'h2', text: t('Thank you for playing'), parent: wrapper });
         for (let p = 0; p < data.players.length; p++) {
@@ -283,6 +285,9 @@ class Game {
             helper.element({ tag: 'p', class: 'player-name', text: data.players[p].username, parent: playerWrapper });
             helper.element({ tag: 'p', class: 'player-score', text: data.players[p].score, parent: playerWrapper });
         }
+        this.gamewindow.appendElement(wrapper);
     }
 }
 Game.instance = null; // game object
+export { ServiceContainer, Game, GameWindow };
+//# sourceMappingURL=game.js.map

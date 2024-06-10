@@ -56,6 +56,8 @@
     <section>
         <a href="/game.php" class="big-button">Play now</a>
     </section>
+
+    <script src="/app/dist/main.js"></script>
 </main>
 </body>
 </html>

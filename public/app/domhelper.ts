@@ -131,3 +131,8 @@ class DOMHelper {
     }
 
 }
+
+export {
+    DOMHelper,
+    DOMHelperData
+};
