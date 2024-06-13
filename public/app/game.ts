@@ -307,7 +307,8 @@ class Game {
         // Buttons
         for (let opt = 0; opt < question.options.length; opt++) {
             let optionText = question.options[opt];
-            let button = helper.element({ tag:'button', value:opt, html:optionText, parent:questionWrapper, type:'button' });
+            // Convert value to string as otherwise no value is added for 0.
+            let button = helper.element({ tag:'button', value:opt.toString(), html:optionText, parent:questionWrapper, type:'button' });
 
             button.addEventListener('click', function (event) {
                 game.submitAnswer(<HTMLButtonElement> this);
