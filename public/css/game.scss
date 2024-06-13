@@ -8,6 +8,7 @@ html { height: 100%; }
 body {
     background-color: #FFF;
     background-image: linear-gradient(#FFF 30%, $deep_purple);
+    background-attachment: fixed;
     font-family: 'Source Sans Pro', Arial, sans-serif;
     margin: 0;
 }

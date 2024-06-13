@@ -34,6 +34,7 @@ class Game {
         this.player = null;
         this.components = { playerList: null };
         this.services = null;
+        this.socketOpened = false;
         this.services = serviceContainer;
         this.gamewindow = gamewindow;
         this.formManager = this.services.formManager;
@@ -67,6 +68,7 @@ class Game {
         let rememberMe = form.data.rememberMe.checked;
         this.socket = new WebSocket('ws://' + host + ':' + port);
         this.socket.onopen = function () {
+            game.socketOpened = true;
             // Show either waiting for game to start or game options
             game.socket.send('{ "action": "player_connected", "username": "' + username + '", "icon": "' + icon + '" }');
             if (rememberMe) {
@@ -82,10 +84,9 @@ class Game {
             }
         };
         this.socket.onmessage = this.handleMessage.bind(this);
-        this.socket.onclose = ((event) => {
-            // console.log('socket closed');
-            let form = this.formManager.forms.connectForm;
-            if (form) {
+        this.socket.onclose = (event) => {
+            if (!game.socketOpened) {
+                let form = game.formManager.forms.connectForm;
                 form.data.errors.innerHTML = '<p class="error">' + t('Connection to server failed') + "</p>";
                 form.data.username.disabled = false;
                 form.data.submitButton.disabled = false;
@@ -97,7 +98,7 @@ class Game {
                 // Ideally would show an error message saying connection lost
                 window.location.reload();
             }
-        }).bind(this);
+        };
     }
     handleMessage(message) {
         let data = JSON.parse(message.data);
@@ -112,8 +113,8 @@ class Game {
                 switch (data.game_status) {
                     // Awaiting game start
                     case 0:
-                        if (data.host == null || data.host.isGameHost) {
-                            this.gamewindow.clear();
+                        this.gamewindow.clear();
+                        if (data.host === null || data.host.username === game.player.username) {
                             // Show configure game options screen
                             this.gamewindow.appendElement(configForm.generate(data));
                             this.components.playerList.redraw();
@@ -133,7 +134,15 @@ class Game {
                 }
                 break;
             case 'round_start':
-                game.showQuestionScreen(data);
+                if (data.previousquestion) {
+                    game.showPreviousRoundSummary(data);
+                    setTimeout(() => {
+                        game.showQuestionScreen(data);
+                    }, 3000);
+                }
+                else {
+                    game.showQuestionScreen(data);
+                }
                 break;
             case 'game_end':
                 game.showGameEndedScreen(data);
@@ -214,7 +223,7 @@ class Game {
      * }
      */
     showQuestionScreen(data) {
-        let helper = new DOMHelper;
+        let helper = this.services.domhelper;
         let question = data.question;
         let game = this;
         this.gamewindow.clear();
@@ -246,11 +255,6 @@ class Game {
             });
         }
         this.gamewindow.appendElement(questionWrapper);
-        // Connected players display
-        // const connectedUsers = helper.element({ tag:'div', class:'connected-players' });
-        // this.components.playerList = new PlayerList(this);
-        // this.gamewindow.appendElement(connectedUsers);
-        // this.components.playerList.redraw();
     }
     /**
      * Select an answer and submit to server
@@ -260,14 +264,27 @@ class Game {
         let answer = JSON.stringify({
             action: "answer_submit",
             answer: button.value
-            // winningScore: 10,
-            // roundTime: 30
         });
         this.socket.send(answer);
         // Clear question from screen
         let questionWrapper = document.querySelector('.question-wrapper');
         questionWrapper.innerHTML = '';
         helper.element({ tag: 'h1', text: t('Waiting for other players to submit answers...'), parent: questionWrapper });
+    }
+    showPreviousRoundSummary(data) {
+        this.gamewindow.clear();
+        const previousQuestion = data.previousquestion;
+        const dom = this.services.domhelper;
+        const wrapper = dom.div({});
+        dom.element({ tag: 'h1', text: `Results from question ${data.questionNumber - 1}`, parent: wrapper });
+        dom.element({ tag: 'h2', text: previousQuestion.text, parent: wrapper });
+        dom.element({ tag: 'p', text: `Correct answer: ${previousQuestion.options[previousQuestion.correct_option_index]}`, parent: wrapper });
+        for (let p = 0; p < data.players.length; p++) {
+            const player = data.players[p];
+            const correct = player.roundScores[player.roundScores.length - 1] > 0 ? 'Correct' : 'Incorrect';
+            dom.element({ tag: 'p', text: `${player.username}: ${correct}`, parent: wrapper });
+        }
+        this.gamewindow.appendElement(wrapper);
     }
     /**
      * Show the scores at the end of the game

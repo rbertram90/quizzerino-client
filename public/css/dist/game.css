@@ -147,6 +147,7 @@ html {
 body {
   background-color: #FFF;
   background-image: linear-gradient(#FFF 30%, #21007F);
+  background-attachment: fixed;
   font-family: "Source Sans Pro", Arial, sans-serif;
   margin: 0;
 }
