@@ -22,7 +22,7 @@ class DOMHelperData {
 
 class DOMHelper {
 
-    public element(data: DOMHelperData) {
+    public element(data: DOMHelperData): HTMLElement {
 
         let element: HTMLElement;
 
@@ -98,7 +98,7 @@ class DOMHelper {
         return this.element(data)
     }
 
-    public dropdown(data: DOMHelperData) {
+    public dropdown(data) {
         data.tag = 'select';
         var elem = this.element(data);
     

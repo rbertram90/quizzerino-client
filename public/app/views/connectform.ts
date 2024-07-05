@@ -22,11 +22,32 @@ class ConnectForm {
 
     protected helper: DOMHelper;
     protected lastConnection: ConnectionData;
-    public data: ConnectFormData;
+    protected data: ConnectFormData;
     protected callback: CallableFunction;
 
     constructor(domhelper: DOMHelper) {
         this.helper = domhelper;
+    }
+
+    public setConnectingStatus() {
+        this.data.errors.innerHTML = '<p class="info loader"><img src="/images/ajax-loader.gif">' + t('Connecting to server') + '</p>';
+    }
+
+    public setConnectionFailedError() {
+        this.data.errors.innerHTML = '<p class="error">' + t('Connection to server failed') + "</p>";
+        this.data.username.disabled = false;
+        this.data.submitButton.disabled = false;
+        this.data.host.disabled = false;
+        this.data.port.disabled = false;
+    }
+
+    public getFieldValue(fieldName: string) {
+        switch (this.data[fieldName].type) {
+            case 'checkbox':
+                return this.data[fieldName].checked;
+            default:
+                return this.data[fieldName].value;
+        }
     }
 
     public generate(): HTMLFormElement {
@@ -139,8 +160,6 @@ class ConnectForm {
     
         submitButton.addEventListener('click', this.openConnection.bind(this));
     
-        // this.game.window().appendElement(connectForm);
-
         this.data = new ConnectFormData;
         this.data.form = connectForm;
         this.data.errors = errorWrapper;
@@ -186,4 +205,4 @@ class ConnectForm {
     }
 }
 
-export { ConnectFormData, ConnectForm };
+export { ConnectForm };

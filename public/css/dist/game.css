@@ -154,7 +154,8 @@ body {
 
 #quiz_game {
   max-width: 800px;
-  margin: 40px auto;
+  margin: 0 auto;
+  padding: 40px;
 }
 #quiz_game h1 {
   margin-bottom: 2em;

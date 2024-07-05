@@ -6,6 +6,24 @@ class ConnectForm {
     constructor(domhelper) {
         this.helper = domhelper;
     }
+    setConnectingStatus() {
+        this.data.errors.innerHTML = '<p class="info loader"><img src="/images/ajax-loader.gif">' + t('Connecting to server') + '</p>';
+    }
+    setConnectionFailedError() {
+        this.data.errors.innerHTML = '<p class="error">' + t('Connection to server failed') + "</p>";
+        this.data.username.disabled = false;
+        this.data.submitButton.disabled = false;
+        this.data.host.disabled = false;
+        this.data.port.disabled = false;
+    }
+    getFieldValue(fieldName) {
+        switch (this.data[fieldName].type) {
+            case 'checkbox':
+                return this.data[fieldName].checked;
+            default:
+                return this.data[fieldName].value;
+        }
+    }
     generate() {
         let username;
         let host;
@@ -99,7 +117,6 @@ class ConnectForm {
         submitButton.innerText = t('Connect');
         actionsWrapper.appendChild(submitButton);
         submitButton.addEventListener('click', this.openConnection.bind(this));
-        // this.game.window().appendElement(connectForm);
         this.data = new ConnectFormData;
         this.data.form = connectForm;
         this.data.errors = errorWrapper;
@@ -137,5 +154,5 @@ class ConnectForm {
         event.preventDefault();
     }
 }
-export { ConnectFormData, ConnectForm };
+export { ConnectForm };
 //# sourceMappingURL=connectform.js.map
