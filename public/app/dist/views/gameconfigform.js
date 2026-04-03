@@ -35,7 +35,7 @@ class GameConfigForm {
             this.helper.element({ tag: "option", value: quizOptions[q].id, text: quizOptions[q].title, parent: quizSelect });
         }
         // Number of Questions
-        let questionCount = this.helper.numberInput({ label: t("Number of questions"), min: 5, max: 100, value: "20", parent: optionsWrapper });
+        let questionCount = this.helper.numberInput({ label: t("Number of questions"), id: "question_count", min: 5, max: 100, value: "20", parent: optionsWrapper });
         // Round timer
         let timeLimit = this.helper.dropdown({ parent: optionsWrapper, id: "time_limit", options: [
                 t("No time limit"),

@@ -112,23 +112,23 @@ export class DOMHelper {
         return element;
     }
     input(data) {
+        if (data.label && data.parent && data.id) {
+            const label = this.label({ for: data.id, html: data.label });
+            data.parent.appendChild(label);
+        }
         let element = this.element({ tag: "input", ...data });
         element.type = data.type || "text";
         if (data.placeholder) {
             element.placeholder = data.placeholder;
         }
-        if (data.label && data.parent && data.id) {
-            const label = this.label({ for: data.id, html: data.label });
-            data.parent.appendChild(label);
-        }
         return element;
     }
     dropdown(data) {
-        const element = this.element({ tag: "select", ...data });
         if (data.label && data.parent && data.id) {
             const label = this.label({ for: data.id, html: data.label });
             data.parent.appendChild(label);
         }
+        const element = this.element({ tag: "select", ...data });
         if (Array.isArray(data.options)) {
             for (let i = 0; i < data.options.length; i++) {
                 const option = this.element({ tag: "option", text: data.options[i], value: i });
@@ -146,10 +146,12 @@ export class DOMHelper {
     }
     checkbox(data) {
         // Generate element first, append label after
+        const labelText = data.label;
+        delete data.label;
         const element = this.input(data);
         element.type = "checkbox";
-        if (data.label && data.parent && data.id) {
-            const label = this.label({ for: data.id, html: data.label });
+        if (labelText && data.parent && data.id) {
+            const label = this.label({ for: data.id, html: labelText });
             data.parent.appendChild(label);
         }
         return element;

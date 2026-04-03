@@ -127,7 +127,13 @@ export class DOMHelper {
         return element;
     }
 
-    public input(data: DOMHelperInputData): HTMLInputElement {
+    public input(data: DOMHelperInputData): HTMLInputElement {   
+        if (data.label && data.parent && data.id) {
+            const label = this.label({ for:data.id, html:data.label } as DOMHelperInputLabelData);
+
+            data.parent.appendChild(label);
+        }
+
         let element = this.element({ tag: "input", ...data }) as HTMLInputElement;
 
         element.type = data.type || "text";
@@ -135,24 +141,18 @@ export class DOMHelper {
         if (data.placeholder) {
             element.placeholder = data.placeholder;
         }
-   
-        if (data.label && data.parent && data.id) {
-            const label = this.label({ for:data.id, html:data.label } as DOMHelperInputLabelData);
-
-            data.parent.appendChild(label);
-        }
     
         return element;
     }
 
     public dropdown(data: DOMHelperSelectData) {
-        const element = this.element({ tag: "select", ...data });
-
         if (data.label && data.parent && data.id) {
             const label = this.label({ for:data.id, html:data.label } as DOMHelperInputLabelData);
 
             data.parent.appendChild(label);
         }
+
+        const element = this.element({ tag: "select", ...data });
 
         if (Array.isArray(data.options)) {
             for (let i = 0; i < data.options.length; i++) {
@@ -177,12 +177,14 @@ export class DOMHelper {
 
     public checkbox(data: DOMHelperInputData): HTMLInputElement {
         // Generate element first, append label after
-        const element = this.input(data);
+        const labelText = data.label;
+        delete data.label;
 
+        const element = this.input(data);
         element.type = "checkbox";
 
-        if (data.label && data.parent && data.id) {
-            const label = this.label({ for:data.id, html:data.label } as DOMHelperInputLabelData);
+        if (labelText && data.parent && data.id) {
+            const label = this.label({ for:data.id, html:labelText } as DOMHelperInputLabelData);
 
             data.parent.appendChild(label);
         }
