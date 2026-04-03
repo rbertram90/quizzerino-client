@@ -1,22 +1,26 @@
 {
     "compilerOptions": {
-        "target": "es2016",
+        "target": "ES2022",
+        "lib": ["DOM", "DOM.Iterable", "ES2022"],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
         "jsx": "preserve",
         "sourceMap": true,
         "outDir": "public/app/dist",
-        "alwaysStrict": false,
-        "importHelpers": false
+        "rootDir": "public/app",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "strictPropertyInitialization": false
     },
     "compileOnSave": true,
     "exclude": [
         "node_modules",
-        "**/node_modules/*"
+        "**/node_modules/*",
+        "public/app/dist"
     ],
     "include": [
-        "public/app/**/*.ts",
-        // "public/app/views/playerlist.ts",
-        // "public/app/views/questionpage.ts",
-        // "public/app/views/connectform.ts",
-        // "public/app/views/gameconfigform.ts"
+        "public/app/**/*.ts"
     ]
 }

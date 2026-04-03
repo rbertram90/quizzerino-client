@@ -39,31 +39,6 @@
     <?php endif; ?>
     </script>
 
-<!--
-    <script src="/lib/jquery-3.4.1.min.js"></script>
-    <script src="/lib/jquery-ui.min.js"></script>
-    <script src="/lib/jquery-ui-touch-punch.min.js"></script>
-    <script src="/app/helpers/DOMHelper.js"></script>
-    <script src="/app/translate.js"></script>
-    <script src="/app/Player.js"></script>
-    <script src="/app/Component.js"></script>
-    <script src="/app/components/PlayerList.js"></script>
-    <script src="/app/components/RoundSubmissions.js"></script>
-    <script src="/app/components/PlayerDeck.js"></script>
--->
-    <!-- Core / utils  
-    <script src="/app/dist/domhelper.js"></script>-->
-    <script src="/app/dist/translate.js"></script>
-
-    <!-- Model -->
-    <script src="/app/dist/player.js"></script>
-
-    <!-- Components -->
-    <script src="/app/dist/component.js"></script>
-    <script src="/app/dist/components/playerlist.js"></script>
-    <!-- <script src="/app/dist/gameconfigform.js"></script>
-    <script src="/app/dist/connectform.js"></script>-->
-    <!-- <script src="/app/dist/game.js" type="module"></script> -->
     <script src="/app/dist/main.js" type="module"></script>
 
 </body>

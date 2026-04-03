@@ -1,12 +1,10 @@
-// import { Game } from "./game.js";
-class Component {
+export class Component {
+    game;
     constructor(game) {
-        this.game = null;
         this.game = game;
     }
     sendMessage(message) {
         // todo be implemented by sub-classes
     }
 }
-// export default Component;
 //# sourceMappingURL=component.js.map

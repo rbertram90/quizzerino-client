@@ -1,17 +1,16 @@
-// import { Game } from "./game.js";
+import { Game } from "./game.js";
+import { Message } from "./messages.js";
 
-class Component {
+export class Component {
 
-    protected game: Game = null;
+    protected game: Game;
 
     constructor (game: Game) {
         this.game = game;
     }
 
-    public sendMessage(message) {
+    public sendMessage(message: Message) {
         // todo be implemented by sub-classes
     }
 
 }
-
-// export default Component;

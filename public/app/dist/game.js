@@ -1,15 +1,19 @@
 import { DOMHelper } from "./domhelper.js";
 import PlayerList from "./views/playerlist.js";
 import { FormManager } from "./FormManager.js";
-class ServiceContainer {
+import { Player } from "./player.js";
+import { t } from "./translate.js";
+export class ServiceContainer {
+    domhelper;
+    formManager;
     constructor() {
         this.domhelper = new DOMHelper;
         this.formManager = new FormManager(this);
     }
 }
-class GameWindow {
+export class GameWindow {
+    element;
     constructor(element) {
-        this.element = null;
         this.element = element;
         document.body.appendChild(element);
     }
@@ -27,24 +31,29 @@ class GameWindow {
         this.element.dispatchEvent(event);
     }
 }
-class Game {
+export class Game {
+    gamewindow;
+    formManager;
+    static instance;
+    socket;
+    clientIsGameHost = false;
+    player = null;
+    components; // @todo sure this can be improved!?
+    services;
+    socketOpened = false;
+    availableQuizzes = null;
     constructor(gamewindow, serviceContainer) {
-        this.socket = null;
-        this.clientIsGameHost = false;
-        this.player = null;
-        this.components = { playerList: null };
-        this.services = null;
-        this.socketOpened = false;
-        this.availableQuizzes = null;
         this.services = serviceContainer;
         this.gamewindow = gamewindow;
         this.formManager = this.services.formManager;
         this.formManager.forms.connectForm.setSubmitCallback(this.createServerConnection.bind(this));
         this.formManager.forms.configForm.setSubmitCallback(this.startGame.bind(this));
-        this.components.playerList = new PlayerList(this);
+        this.components = {
+            playerList: new PlayerList(this)
+        };
         Game.instance = this;
     }
-    static getInstance(gamewindow = null, serviceContainer) {
+    static getInstance(gamewindow, serviceContainer) {
         if (Game.instance) {
             return Game.instance;
         }
@@ -67,13 +76,13 @@ class Game {
         let username = form.getFieldValue("username");
         let icon = form.getFieldValue("icon");
         let rememberMe = form.getFieldValue("rememberMe");
-        this.socket = new WebSocket('ws://' + host + ':' + port);
+        this.socket = new WebSocket(`ws://${host}:${port}`);
         this.socket.onopen = function () {
             game.socketOpened = true;
             // Show either waiting for game to start or game options
-            game.socket.send('{ "action": "player_connected", "username": "' + username + '", "icon": "' + icon + '" }');
+            game.socket.send(`{ "action": "player_connected", "username": "${username}", "icon": "${icon}" }`);
             if (rememberMe) {
-                window.localStorage.setItem('last_server_connection', JSON.stringify({
+                window.localStorage.setItem("last_server_connection", JSON.stringify({
                     host: host,
                     port: port,
                     username: username,
@@ -81,7 +90,7 @@ class Game {
                 }));
             }
             else {
-                window.localStorage.removeItem('last_server_connection');
+                window.localStorage.removeItem("last_server_connection");
             }
         };
         this.socket.onmessage = this.handleMessage.bind(this);
@@ -101,15 +110,15 @@ class Game {
         let data = JSON.parse(message.data);
         let game = this;
         switch (data.type) {
-            case 'connected_game_status':
+            case "connected_game_status":
                 const connectForm = game.formManager.forms.connectForm;
                 const username = connectForm.getFieldValue("username");
-                this.player = new Player(game, username);
+                this.player = new Player(game, `${username}`);
                 this.availableQuizzes = data.quiz_options;
                 switch (data.game_status) {
                     // Awaiting game start
                     case 0:
-                        if (data.host === null || data.host.username === game.player.username) {
+                        if (data.host === null || data.host.username === this.player.username) {
                             this.showGameConfigForm();
                         }
                         else {
@@ -118,14 +127,14 @@ class Game {
                         break;
                 }
                 break;
-            case 'player_connected':
+            case "player_connected":
                 // Check if the player that connected is local player test
                 // If they are game host then enable buttons
                 if (data.host) {
                     game.clientIsGameHost = true;
                 }
                 break;
-            case 'round_start':
+            case "round_start":
                 if (data.previousquestion) {
                     game.showPreviousRoundSummary(data);
                     setTimeout(() => {
@@ -136,7 +145,7 @@ class Game {
                     game.showQuestionScreen(data);
                 }
                 break;
-            case 'game_end':
+            case "game_end":
                 game.showGameEndedScreen(data);
                 break;
         }
@@ -169,23 +178,23 @@ class Game {
     showGameConfigForm() {
         this.gamewindow.clear();
         const configForm = this.formManager.forms.configForm;
-        this.gamewindow.appendElement(configForm.generate(this.availableQuizzes));
-        this.components.playerList.redraw();
+        this.gamewindow.appendElement(configForm.generate(this.availableQuizzes || []));
+        this.components.playerList?.redraw();
     }
     /**
      * Called for users that are NOT the host when joining
      * the server before the game has started
      *
-     * Shows a 'waiting for game to start' screen
+     * Shows a "waiting for game to start" screen
      */
     loadAwaitGameStart() {
         this.gamewindow.clear();
         let helper = this.services.domhelper;
-        let wrapper = helper.element({ tag: 'div', id: 'awaiting_game_start' });
-        let lhs = helper.element({ tag: 'div', class: 'waiting_panel', parent: wrapper });
-        helper.element({ tag: 'h2', text: t('Waiting for host to start the game...'), parent: lhs });
-        helper.element({ tag: 'img', src: '/images/waiting.gif', alt: t('Humorous animation of a person waiting'), parent: lhs });
-        // let connectedUsers = helper.element({ tag:'div', class:'connected-players', parent:wrapper });
+        let wrapper = helper.element({ tag: "div", id: "awaiting_game_start" });
+        let lhs = helper.element({ tag: "div", class: "waiting_panel", parent: wrapper });
+        helper.element({ tag: "h2", text: t("Waiting for host to start the game..."), parent: lhs });
+        helper.element({ tag: "img", src: "/images/waiting.gif", alt: t("Humorous animation of a person waiting"), parent: lhs });
+        // let connectedUsers = helper.element({ tag:"div", class:"connected-players", parent:wrapper });
         // this.components.playerList = new PlayerList(this);
         this.gamewindow.appendElement(wrapper);
     }
@@ -231,30 +240,33 @@ class Game {
         let question = data.question;
         let game = this;
         this.gamewindow.clear();
-        let questionWrapper = helper.element({ tag: 'div', class: 'question-wrapper' });
+        let questionWrapper = helper.element({ tag: "div", class: "question-wrapper" });
         // Question text
-        helper.element({ tag: 'p', text: t('Question') + ' ' + data.questionNumber, parent: questionWrapper });
-        helper.element({ tag: 'h1', html: question.text, parent: questionWrapper });
+        helper.element({ tag: "p", text: t("Question") + " " + data.questionNumber, parent: questionWrapper });
+        helper.element({ tag: "h1", html: question.text, parent: questionWrapper });
         // Timer
         if (parseInt(data.roundTime) > 0) {
-            helper.element({ tag: 'div', id: 'round_timer', data: { 'round-end-UTC': data.roundEndTimeUTC }, parent: questionWrapper });
+            helper.element({ tag: "div", id: "round_timer", data: { "round-end-UTC": data.roundEndTimeUTC }, parent: questionWrapper });
             window.setInterval(function () {
-                let roundTimerElem = document.getElementById('round_timer');
+                let roundTimerElem = document.getElementById("round_timer");
+                if (!roundTimerElem) {
+                    return;
+                }
                 // End date
-                let endDate = parseInt(roundTimerElem.dataset.roundEndUtc);
+                let endDate = parseInt(roundTimerElem.dataset.roundEndUtc || "");
                 let now = Date.now() / 1000; // convert to seconds
                 // Round to 2dp
                 let remaining = Math.round((endDate - now) * 100) / 100;
                 // Update time remaining
-                document.getElementById('round_timer').innerText = 'Time remaining: ' + remaining.toString();
+                roundTimerElem.innerText = "Time remaining: " + remaining.toString();
             }, 10);
         }
         // Buttons
         for (let opt = 0; opt < question.options.length; opt++) {
             let optionText = question.options[opt];
             // Convert value to string as otherwise no value is added for 0.
-            let button = helper.element({ tag: 'button', value: opt.toString(), html: optionText, parent: questionWrapper, type: 'button' });
-            button.addEventListener('click', function (event) {
+            let button = helper.button({ value: opt.toString(), html: optionText, parent: questionWrapper, type: "button" });
+            button.addEventListener("click", function (event) {
                 game.submitAnswer(this);
                 event.preventDefault();
             });
@@ -272,22 +284,22 @@ class Game {
         });
         this.socket.send(answer);
         // Clear question from screen
-        let questionWrapper = document.querySelector('.question-wrapper');
-        questionWrapper.innerHTML = '';
-        helper.element({ tag: 'h1', text: t('Waiting for other players to submit answers...'), parent: questionWrapper });
+        let questionWrapper = document.querySelector(".question-wrapper");
+        questionWrapper.innerHTML = "";
+        helper.element({ tag: "h1", text: t("Waiting for other players to submit answers..."), parent: questionWrapper });
     }
     showPreviousRoundSummary(data) {
         this.gamewindow.clear();
         const previousQuestion = data.previousquestion;
         const dom = this.services.domhelper;
         const wrapper = dom.div({});
-        dom.element({ tag: 'h1', text: `Results from question ${data.questionNumber - 1}`, parent: wrapper });
-        dom.element({ tag: 'h2', text: previousQuestion.text, parent: wrapper });
-        dom.element({ tag: 'p', text: `Correct answer: ${previousQuestion.options[previousQuestion.correct_option_index]}`, parent: wrapper });
+        dom.element({ tag: "h1", text: `Results from question ${data.questionNumber - 1}`, parent: wrapper });
+        dom.element({ tag: "h2", text: previousQuestion.text, parent: wrapper });
+        dom.element({ tag: "p", text: `Correct answer: ${previousQuestion.options[previousQuestion.correct_option_index]}`, parent: wrapper });
         for (let p = 0; p < data.players.length; p++) {
             const player = data.players[p];
-            const correct = player.roundScores[player.roundScores.length - 1] > 0 ? 'Correct' : 'Incorrect';
-            dom.element({ tag: 'p', text: `${player.username}: ${correct}`, parent: wrapper });
+            const correct = player.roundScores[player.roundScores.length - 1] > 0 ? "Correct" : "Incorrect";
+            dom.element({ tag: "p", text: `${player.username}: ${correct}`, parent: wrapper });
         }
         this.gamewindow.appendElement(wrapper);
     }
@@ -299,9 +311,9 @@ class Game {
     showGameEndedScreen(data) {
         this.gamewindow.clear();
         let helper = new DOMHelper;
-        let wrapper = helper.element({ tag: 'div', id: 'game_ended' });
-        helper.element({ tag: 'h1', text: t('Game ended'), parent: wrapper });
-        helper.element({ tag: 'h2', text: t('Thank you for playing'), parent: wrapper });
+        let wrapper = helper.element({ tag: "div", id: "game_ended" });
+        helper.element({ tag: "h1", text: t("Game ended"), parent: wrapper });
+        helper.element({ tag: "h2", text: t("Thank you for playing"), parent: wrapper });
         data.players.sort((first, second) => {
             if (first.score === second.score) {
                 return 0;
@@ -309,18 +321,16 @@ class Game {
             return first.score > second.score ? -1 : 1;
         });
         for (let p = 0; p < data.players.length; p++) {
-            let playerWrapper = helper.element({ tag: 'div', class: 'player-score', parent: wrapper });
-            helper.element({ tag: 'p', class: 'player-name', text: data.players[p].username, parent: playerWrapper });
-            helper.element({ tag: 'p', class: 'player-score', text: data.players[p].score, parent: playerWrapper });
+            let playerWrapper = helper.element({ tag: "div", class: "player-score", parent: wrapper });
+            helper.element({ tag: "p", class: "player-name", text: data.players[p].username, parent: playerWrapper });
+            helper.element({ tag: "p", class: "player-score", text: data.players[p].score, parent: playerWrapper });
         }
         if (this.clientIsGameHost) {
-            const newRoundButton = helper.element({ tag: 'button', id: 'new_round', text: t('Start a new game, keeping current scores'), parent: wrapper });
+            const newRoundButton = helper.element({ tag: "button", id: "new_round", text: t("Start a new game, keeping current scores"), parent: wrapper });
             newRoundButton.addEventListener("click", this.showGameConfigForm.bind(this));
-            const newRoundResetButton = helper.element({ tag: 'button', id: 'new_round_reset', text: t('Start a new game and reset scores'), parent: wrapper });
+            helper.element({ tag: "button", id: "new_round_reset", text: t("Start a new game and reset scores"), parent: wrapper });
         }
         this.gamewindow.appendElement(wrapper);
     }
 }
-Game.instance = null; // game object
-export { ServiceContainer, Game, GameWindow };
 //# sourceMappingURL=game.js.map

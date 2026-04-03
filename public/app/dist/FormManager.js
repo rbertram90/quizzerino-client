@@ -1,6 +1,7 @@
 import { GameConfigForm } from "./views/gameconfigform.js";
 import { ConnectForm } from "./views/connectform.js";
 class FormManager {
+    forms;
     constructor(services) {
         this.forms = {
             connectForm: new ConnectForm(services.domhelper),

@@ -1,14 +1,12 @@
 <?php
 
-class Translate
-{
+class Translate {
 
     public static $language = 'en';
     protected static $translations = [];
     public static $checked = false;
 
-    public static function t($string, $return = false)
-    {
+    public static function t($string, $return = false) {
         self::getTranslations();
 
         if (array_key_exists($string, self::$translations)) {
@@ -35,4 +33,5 @@ class Translate
         }
         return self::$translations;
     }
+
 }
