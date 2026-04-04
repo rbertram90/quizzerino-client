@@ -1,3 +1,4 @@
+import { DOMHelperInputData } from "./domhelper.js";
 import { Player } from "./player.js";
 
 export interface Message {
@@ -47,8 +48,19 @@ export class QuizDefinition {
     title: string;
     description: string;
     id: string;
-    settings: object;
+    config: (QuizSetting|QuizMultipleChoiceSetting)[];
     controller: string;
+}
+
+export class QuizSetting extends DOMHelperInputData {
+    datatype:("select"|"text"|"number");
+}
+export class QuizMultipleChoiceSetting extends QuizSetting {
+    options: string[];
+}
+export class QuizSettingValue {
+    id: string;
+    value: string;
 }
 
 export class Question {

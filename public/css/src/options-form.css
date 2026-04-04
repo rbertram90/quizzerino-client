@@ -8,4 +8,14 @@
   input {
     margin-bottom: 10px;
   }
+
+  .description {
+    margin-bottom: 10px;
+    font-style: italic;
+    color: #444;
+  }
+
+  .error {
+    color: red;
+  }
 }

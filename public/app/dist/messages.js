@@ -1,3 +1,4 @@
+import { DOMHelperInputData } from "./domhelper.js";
 export class PlayerConnectedMessage {
     type;
     players;
@@ -31,8 +32,18 @@ export class QuizDefinition {
     title;
     description;
     id;
-    settings;
+    config;
     controller;
+}
+export class QuizSetting extends DOMHelperInputData {
+    datatype;
+}
+export class QuizMultipleChoiceSetting extends QuizSetting {
+    options;
+}
+export class QuizSettingValue {
+    id;
+    value;
 }
 export class Question {
     text;

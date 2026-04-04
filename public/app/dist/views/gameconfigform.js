@@ -1,10 +1,11 @@
 import { t } from "../translate.js";
-class GameConfigFormData {
+export class GameConfigFormData {
     quizChoice;
     numberOfQuestions;
     timeLimit;
+    quizSettings;
 }
-class GameConfigForm {
+export class GameConfigForm {
     helper;
     callback;
     quizCatalogue;
@@ -12,6 +13,7 @@ class GameConfigForm {
     quizSelect;
     questionCount;
     timeLimit;
+    quizSettings;
     constructor(domhelper) {
         this.helper = domhelper;
     }
@@ -31,9 +33,22 @@ class GameConfigForm {
         this.helper.element({ tag: "h2", text: t("Game settings"), parent: optionsWrapper });
         this.helper.label({ text: t("Question set"), for: "question_set", parent: optionsWrapper });
         let quizSelect = this.helper.element({ tag: "select", id: "question_set", parent: optionsWrapper });
+        this.helper.element({ tag: "option", value: "", parent: quizSelect });
         for (let q = 0; q < quizOptions.length; q++) {
             this.helper.element({ tag: "option", value: quizOptions[q].id, text: quizOptions[q].title, parent: quizSelect });
         }
+        let quizDescription = this.helper.div({ id: "quiz_description", parent: optionsWrapper, class: "description" });
+        quizSelect.addEventListener("change", (event) => {
+            const selectedQuiz = quizOptions.find((definition) => definition.id === quizSelect.value);
+            if (!selectedQuiz) {
+                return;
+            }
+            quizDescription.innerText = selectedQuiz.description || "";
+            const settingsForm = this.generateQuizSettingsForm(selectedQuiz);
+            if (settingsForm) {
+                quizDescription.after(settingsForm);
+            }
+        });
         // Number of Questions
         let questionCount = this.helper.numberInput({ label: t("Number of questions"), id: "question_count", min: 5, max: 100, value: "20", parent: optionsWrapper });
         // Round timer
@@ -56,11 +71,47 @@ class GameConfigForm {
         this.quizSelect = quizSelect;
         return optionsWrapper;
     }
+    generateQuizSettingsForm(quiz) {
+        let existingSettingsWrapper = document.getElementById("quiz_settings");
+        if (existingSettingsWrapper) {
+            existingSettingsWrapper.remove();
+        }
+        if (!quiz.config) {
+            return null;
+        }
+        const settingsWrapper = this.helper.div({ id: "quiz_settings" });
+        quiz.config.forEach((field) => {
+            let elementData = { ...field, parent: settingsWrapper };
+            if (field.datatype === "number") {
+                this.helper.numberInput(elementData);
+            }
+            if (field.datatype === "select") {
+                this.helper.dropdown(elementData);
+            }
+            if (field.datatype === "text") {
+                this.helper.input(elementData);
+            }
+        });
+        return settingsWrapper;
+    }
     submit() {
-        // Validate?
-        // console.log(this);
+        // Remove any existing errors.
+        document.querySelectorAll("#game_options .error").forEach((errorElement) => {
+            errorElement.remove();
+        });
+        // Check a quiz has been selected.
+        if (!this.quizSelect.value) {
+            this.quizSelect.after(this.helper.div({ text: "Please select a quiz.", class: "error" }));
+            return;
+        }
+        let settingFields = document.querySelectorAll("#quiz_settings input, #quiz_settings select");
+        if (settingFields) {
+            this.quizSettings = [];
+            settingFields.forEach((formElement) => {
+                this.quizSettings.push({ id: formElement.id, value: formElement.value });
+            });
+        }
         this.callback();
     }
 }
-export { GameConfigFormData, GameConfigForm };
 //# sourceMappingURL=gameconfigform.js.map

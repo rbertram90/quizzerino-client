@@ -1,23 +1,24 @@
 import { DOMHelper, DOMHelperDivData } from "../domhelper.js";
-import { QuizDefinition } from "../messages.js";
+import { QuizDefinition, QuizMultipleChoiceSetting, QuizSettingValue } from "../messages.js";
 import { t } from "../translate.js";
 
-class GameConfigFormData {
-    public quizChoice: HTMLSelectElement;
-    public numberOfQuestions: HTMLInputElement;
-    public timeLimit: HTMLSelectElement;
+export class GameConfigFormData {
+    quizChoice: HTMLSelectElement;
+    numberOfQuestions: HTMLInputElement;
+    timeLimit: HTMLSelectElement;
+    quizSettings: QuizSettingValue[];
 }
 
-class GameConfigForm {
-
+export class GameConfigForm {
     protected helper: DOMHelper;
     protected callback: CallableFunction;
     protected quizCatalogue: QuizDefinition[];
 
     // These are populated when form generated
-    public quizSelect: HTMLSelectElement;
-    public questionCount: HTMLInputElement;
-    public timeLimit: HTMLSelectElement;
+    quizSelect: HTMLSelectElement;
+    questionCount: HTMLInputElement;
+    timeLimit: HTMLSelectElement;
+    quizSettings: QuizSettingValue[];
 
     constructor(domhelper: DOMHelper) {
         this.helper = domhelper;
@@ -44,10 +45,29 @@ class GameConfigForm {
         this.helper.label({ text:t("Question set"), for:"question_set", parent:optionsWrapper });
 
         let quizSelect = this.helper.element({ tag:"select", id:"question_set", parent:optionsWrapper }) as HTMLSelectElement;
+        this.helper.element({ tag:"option", value:"", parent:quizSelect });
 
         for (let q = 0; q < quizOptions.length; q++) {
             this.helper.element({ tag:"option", value:quizOptions[q].id, text:quizOptions[q].title, parent:quizSelect });
         }
+
+        let quizDescription = this.helper.div({ id:"quiz_description", parent:optionsWrapper, class:"description" });
+
+        quizSelect.addEventListener("change", (event) => {
+            const selectedQuiz = quizOptions.find((definition) => definition.id === quizSelect.value);
+
+            if (! selectedQuiz) {
+                return;
+            }
+
+            quizDescription.innerText = selectedQuiz.description || "";
+
+            const settingsForm = this.generateQuizSettingsForm(selectedQuiz);
+
+            if (settingsForm) {
+                quizDescription.after(settingsForm);
+            }
+        });
 
         // Number of Questions
         let questionCount = this.helper.numberInput({ label:t("Number of questions"), id:"question_count", min:5, max:100, value:"20", parent:optionsWrapper });
@@ -76,15 +96,57 @@ class GameConfigForm {
         return optionsWrapper;
     }
 
+    protected generateQuizSettingsForm(quiz: QuizDefinition): HTMLDivElement|null {
+        let existingSettingsWrapper = document.getElementById("quiz_settings");
+        if (existingSettingsWrapper) {
+            existingSettingsWrapper.remove();
+        }
+
+        if (! quiz.config) {
+            return null;
+        }
+
+        const settingsWrapper = this.helper.div({ id: "quiz_settings" });
+
+        quiz.config.forEach((field) => {
+            let elementData = { ...field, parent: settingsWrapper };
+
+            if (field.datatype === "number") {
+                this.helper.numberInput(elementData);
+            }
+            if (field.datatype === "select") {
+                this.helper.dropdown(elementData as QuizMultipleChoiceSetting);
+            }
+            if (field.datatype === "text") {
+                this.helper.input(elementData);
+            }
+        });
+
+        return settingsWrapper;
+    }
+
     protected submit() {
-        // Validate?
-        // console.log(this);
+        // Remove any existing errors.
+        document.querySelectorAll("#game_options .error").forEach((errorElement) => {
+            errorElement.remove();
+        });
+
+        // Check a quiz has been selected.
+        if (! this.quizSelect.value) {
+            this.quizSelect.after(this.helper.div({ text:"Please select a quiz.", class:"error" } ));
+            return;
+        }
+
+        let settingFields = document.querySelectorAll("#quiz_settings input, #quiz_settings select") as NodeListOf<HTMLInputElement|HTMLSelectElement>;
+
+        if (settingFields) {
+            this.quizSettings = [];
+
+            settingFields.forEach((formElement) => {
+                this.quizSettings.push({ id:formElement.id, value:formElement.value });
+            });
+        }
 
         this.callback();
     }
 }
-
-export {
-    GameConfigFormData,
-    GameConfigForm
-};

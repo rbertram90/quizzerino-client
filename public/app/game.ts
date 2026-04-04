@@ -258,7 +258,8 @@ export class Game {
             action: "start_game",
             quiz: configForm.quizSelect.value,
             numberOfQuestions: configForm.questionCount.value,
-            timeLimit: configForm.timeLimit.value
+            timeLimit: configForm.timeLimit.value,
+            fieldSettings: configForm.quizSettings,
         });
         this.socket.send(config);
     }
